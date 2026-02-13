@@ -420,7 +420,7 @@
 
             if ("serial" in navigator) {
                 try {
-                    port = await navigator.serial.requestPort();
+                    port = await navigator.serial.requestPort({ filters: [] });
                     await port.open({ baudRate: 9600 });
                     
                     isConnected = true;
@@ -484,3 +484,4 @@
     </script>
 </body>
 </html>
+
