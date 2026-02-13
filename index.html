@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#121212">
-    <title>InsoleTech Mobile</title>
+    <title>InsoleTech Pixel</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -14,17 +14,17 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <style>
-        /* --- STILE --- */
+        /* --- STILE ADATTATO PER PIXEL / ANDROID --- */
         :root {
-            --bg-body: #121212;
-            --bg-card: #1e1e1e;
+            --bg-body: #000000; /* Nero assoluto per schermi OLED Pixel */
+            --bg-card: #1c1c1e;
             --text-main: #ffffff;
-            --text-muted: #aaaaaa;
-            --accent-blue: #3b82f6;
-            --accent-green: #10b981;
+            --text-muted: #b0b0b0;
+            --accent-blue: #4da6ff;
+            --accent-green: #34d399;
             --accent-red: #ef4444;
             --border: rgba(255,255,255,0.15);
-            --nav-height: 60px;
+            --nav-height: 64px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -33,134 +33,128 @@
             background-color: var(--bg-body);
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
-            /* Rimosso overflow:hidden per permettere lo scroll naturale */
             min-height: 100vh;
-            padding-top: var(--nav-height); /* Spazio per l'header fisso */
+            padding-top: var(--nav-height);
+            /* Abilita lo scroll verticale fluido */
+            overflow-y: scroll; 
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* HEADER FISSO */
+        /* HEADER */
         header {
-            position: fixed; top: 0; left: 0; width: 100%;
-            height: var(--nav-height);
-            background: rgba(18, 18, 18, 0.98);
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px;
-            z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 0 16px;
+            z-index: 9999;
         }
 
-        .brand { font-weight: 800; font-size: 1.1rem; color: #fff; letter-spacing: 0.5px; }
+        .brand { font-weight: 800; font-size: 1.2rem; color: #fff; letter-spacing: 0.5px; }
 
-        .header-controls { display: flex; align-items: center; gap: 8px; }
+        .header-controls { display: flex; align-items: center; gap: 10px; }
         
         #status-dot { 
-            width: 10px; height: 10px; background: #444; border-radius: 50%; 
-            margin-right: 5px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.2);
+            width: 12px; height: 12px; background: #333; border-radius: 50%; 
+            border: 2px solid #000; transition: 0.3s;
         }
         
-        /* BOTTONI */
-        button { cursor: pointer; border: none; outline: none; }
+        button { border: none; outline: none; cursor: pointer; }
 
+        /* Icon Buttons (Reset/Pause) */
         .btn-icon {
             background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.1);
             color: white;
-            width: 38px; height: 38px;
-            border-radius: 8px;
-            font-size: 1.1rem;
+            width: 42px; height: 42px; /* Più grandi per il touch */
+            border-radius: 10px;
+            font-size: 1.2rem;
             display: flex; align-items: center; justify-content: center;
         }
-        .btn-icon:active { background: rgba(255,255,255,0.25); }
+        .btn-icon:active { background: rgba(255,255,255,0.3); }
 
+        /* Connect Button */
         .btn-connect {
-            background: var(--accent-blue); color: white;
-            padding: 0 18px; height: 38px; border-radius: 8px;
-            font-weight: 700; font-size: 0.85rem; text-transform: uppercase;
+            background: var(--accent-blue); color: #000;
+            padding: 0 20px; height: 42px; border-radius: 10px;
+            font-weight: 700; font-size: 0.9rem; text-transform: uppercase;
         }
-        .btn-connect:active { filter: brightness(1.1); }
 
-        /* CONTENITORE PRINCIPALE */
+        /* CONTAINER */
         .container {
-            padding: 15px;
-            display: flex; flex-direction: column; gap: 20px;
-            padding-bottom: 50px;
+            padding: 20px;
+            display: flex; flex-direction: column; gap: 24px;
+            padding-bottom: 80px; /* Spazio extra in fondo */
         }
 
-        /* CARD */
+        /* CARDS */
         .card {
             background: var(--bg-card);
-            border-radius: 16px;
+            border-radius: 18px;
             border: 1px solid var(--border);
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .card-header {
-            padding: 15px;
+            padding: 16px;
             background: rgba(255,255,255,0.03);
             border-bottom: 1px solid var(--border);
-            font-size: 0.9rem; font-weight: 600; color: var(--text-muted);
+            font-size: 0.95rem; font-weight: 700; color: var(--text-muted);
             text-transform: uppercase; letter-spacing: 1px;
         }
 
-        /* VISUALIZZATORE PIEDE */
+        /* PIEDE (P5) */
         #p5-container {
-            width: 100%; 
-            height: 320px; /* Un po' più alto */
+            width: 100%; height: 350px; 
             background: #000;
             display: flex; justify-content: center; align-items: center;
             position: relative;
         }
-
+        
         .alert-toast {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            background: #ef4444; color: white; 
-            padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.9rem;
-            display: none; pointer-events: none; z-index: 5;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            background: #ef4444; color: white; padding: 10px 20px;
+            border-radius: 30px; font-weight: 700; font-size: 1rem;
+            display: none; z-index: 10;
         }
 
-        /* DATI LIVE (Resi molto più visibili) */
-        .stats-grid {
-            display: grid; grid-template-columns: 1fr 1fr 1fr;
-            gap: 1px; background: var(--border); /* Per creare le linee divisorie */
+        /* STATS (Numeri Grandi) */
+        .stats-row {
+            display: flex; border-top: 1px solid var(--border);
         }
         .stat-box {
-            background: var(--bg-card);
-            padding: 15px 5px; text-align: center;
+            flex: 1; padding: 20px 5px; text-align: center;
+            border-right: 1px solid var(--border);
         }
-        .stat-label { 
-            font-size: 0.8rem; color: #ccc; margin-bottom: 5px; display: block; 
-            font-weight: 600;
-        }
-        .stat-val { 
-            font-size: 1.5rem; font-weight: 800; font-family: monospace; 
-        }
+        .stat-box:last-child { border-right: none; }
+        
+        .stat-label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 5px; font-weight: 600; }
+        .stat-val { display: block; font-size: 1.8rem; font-weight: 800; font-family: monospace; }
         
         .c-blue { color: #60a5fa; }
         .c-red { color: #f87171; }
         .c-green { color: #34d399; }
 
         /* GRAFICO */
-        .chart-wrapper { 
-            height: 250px; /* Aumentato altezza */
-            width: 100%; padding: 10px; 
-            background: #1a1a1a;
+        .chart-wrapper {
+            height: 300px; /* Molto più alto */
+            width: 100%; padding: 15px;
+            background: #151515;
         }
 
         /* TABELLA */
-        .table-area { padding: 15px; }
-        .btn-full { 
-            width: 100%; padding: 14px; border-radius: 10px; border: none;
-            font-weight: 700; font-size: 0.95rem; cursor: pointer;
-            background: rgba(16, 185, 129, 0.15); color: var(--accent-green);
-            border: 1px solid rgba(16, 185, 129, 0.3); margin-bottom: 20px;
+        .action-area { padding: 20px; }
+        .btn-full {
+            width: 100%; padding: 16px; border-radius: 12px;
+            background: rgba(52, 211, 153, 0.15); color: var(--accent-green);
+            border: 1px solid rgba(52, 211, 153, 0.4);
+            font-weight: 700; font-size: 1rem; margin-bottom: 20px;
         }
         
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: center; }
-        .data-table th { color: var(--text-muted); font-weight: 500; padding-bottom: 12px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
-        .data-table td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 1.1rem; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: center; }
+        .data-table th { color: #888; padding-bottom: 15px; border-bottom: 1px solid #333; font-size: 0.9rem; }
+        .data-table td { padding: 15px 0; border-bottom: 1px solid #222; font-family: monospace; font-size: 1.1rem; color: #fff; }
+        
         .diff-pos { color: var(--accent-green); }
         .diff-neg { color: var(--accent-red); }
 
@@ -184,8 +178,7 @@
             <div id="p5-container">
                 <div id="alert-msg" class="alert-toast">⚠️ SBILANCIAMENTO</div>
             </div>
-
-            <div class="stats-grid">
+            <div class="stats-row">
                 <div class="stat-box">
                     <span class="stat-label">RETRO</span>
                     <span class="stat-val c-blue" id="val-r">0</span>
@@ -210,7 +203,7 @@
 
         <div class="card">
             <div class="card-header">ANALISI CLINICA</div>
-            <div class="table-area">
+            <div class="action-area">
                 <button class="btn-full" id="btn-snapshot">📷 SALVA BASELINE</button>
                 <table class="data-table">
                     <thead><tr><th>ZONA</th><th>BASE</th><th>LIVE</th><th>DIFF</th></tr></thead>
@@ -235,7 +228,7 @@
         let isPaused = false;
         let port, reader, readableStreamClosed;
 
-        // --- P5.JS SETUP ---
+        // --- P5.JS ---
         function setup() {
             let container = document.getElementById('p5-container');
             let cnv = createCanvas(container.offsetWidth, container.offsetHeight);
@@ -253,14 +246,11 @@
             push();
             translate(width/2, height/2);
 
-            // Scala ottimizzata per riempire il box senza uscire
             let scaleFactor = min(width, height) / 380; 
             scale(scaleFactor);
 
             // Disegno Piede
-            noFill();
-            stroke(255, 40); 
-            strokeWeight(3); // Linea un po' più spessa per visibilità
+            noFill(); stroke(255, 50); strokeWeight(3);
             beginShape();
             vertex(-30, -140); bezierVertex(-10, -160, 40, -150, 60, -110);
             bezierVertex(70, -50, 70, 50, 50, 150); bezierVertex(30, 180, -20, 180, -40, 150);
@@ -268,62 +258,50 @@
             endShape(CLOSE);
             
             // Sensori
-            drawSensor(5, 150, r, [59, 130, 246]);   // Blu
-            drawSensor(40, 0, m, [239, 68, 68]);     // Rosso
-            drawSensor(-20, -120, a, [16, 185, 129]); // Verde
+            drawSensor(5, 150, r, [77, 166, 255]);   // Blu
+            drawSensor(40, 0, m, [255, 99, 99]);     // Rosso
+            drawSensor(-20, -120, a, [52, 211, 153]); // Verde
             
             // Baricentro
             let total = r + m + a;
             if (total > 50) {
                 let x = ((r * 5) + (m * 40) + (a * -20)) / total;
                 let y = ((r * 150) + (m * 0) + (a * -120)) / total;
+                smoothX = lerp(smoothX, x, 0.1); smoothY = lerp(smoothY, y, 0.1);
+                trace.push({x: smoothX, y: smoothY}); if(trace.length > 20) trace.shift();
                 
-                smoothX = lerp(smoothX, x, 0.1);
-                smoothY = lerp(smoothY, y, 0.1);
-                
-                trace.push({x: smoothX, y: smoothY});
-                if(trace.length > 25) trace.shift();
-                
-                noFill(); stroke(255, 200); strokeWeight(2);
+                noFill(); stroke(255, 150); strokeWeight(2);
                 beginShape(); trace.forEach(p => vertex(p.x, p.y)); endShape();
-                noStroke(); fill(255); ellipse(smoothX, smoothY, 14, 14);
+                noStroke(); fill(255); ellipse(smoothX, smoothY, 15, 15);
                 
                 let alertBox = document.getElementById('alert-msg');
                 if(Math.abs(smoothX) > 40) alertBox.style.display = 'block';
                 else alertBox.style.display = 'none';
             }
             pop();
-            
             updateUI();
         }
 
         function drawSensor(x, y, val, rgb) {
-            let size = map(val, 0, 800, 30, 240);
-            size = constrain(size, 30, 260);
-            let alpha = map(val, 0, 800, 60, 220);
-            
-            noStroke();
-            fill(rgb[0], rgb[1], rgb[2], alpha);
-            ellipse(x, y, size);
-            
-            // Punto centrale
-            fill(255, 255); 
-            ellipse(x, y, 8);
+            let size = map(val, 0, 800, 30, 240); size = constrain(size, 30, 260);
+            let alpha = map(val, 0, 800, 50, 220);
+            noStroke(); fill(rgb[0], rgb[1], rgb[2], alpha); ellipse(x, y, size);
+            fill(255); ellipse(x, y, 8);
         }
 
-        // --- CHART.JS (Configurato per visibilità Mobile) ---
+        // --- CHART.JS ---
         const ctx = document.getElementById('liveChart').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: Array(30).fill(''),
                 datasets: [
-                    { label: 'R', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, borderWidth: 3, pointRadius: 0, tension: 0.3 },
+                    { label: 'R', data: [], borderColor: '#4da6ff', backgroundColor: 'rgba(77, 166, 255, 0.1)', fill: true, borderWidth: 3, pointRadius: 0, tension: 0.3 },
                     { label: 'M', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, borderWidth: 3, pointRadius: 0, tension: 0.3 },
-                    { label: 'A', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, borderWidth: 3, pointRadius: 0, tension: 0.3 },
-                    { label: 'Base', data: [], borderColor: '#fff', borderDash:[6,6], borderWidth:2, pointRadius:0, hidden:true },
-                    { label: 'Base', data: [], borderColor: '#fff', borderDash:[6,6], borderWidth:2, pointRadius:0, hidden:true },
-                    { label: 'Base', data: [], borderColor: '#fff', borderDash:[6,6], borderWidth:2, pointRadius:0, hidden:true }
+                    { label: 'A', data: [], borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)', fill: true, borderWidth: 3, pointRadius: 0, tension: 0.3 },
+                    { label: 'B', data: [], borderColor: '#fff', borderDash:[5,5], borderWidth:2, pointRadius:0, hidden:true },
+                    { label: 'B', data: [], borderColor: '#fff', borderDash:[5,5], borderWidth:2, pointRadius:0, hidden:true },
+                    { label: 'B', data: [], borderColor: '#fff', borderDash:[5,5], borderWidth:2, pointRadius:0, hidden:true }
                 ]
             },
             options: {
@@ -331,27 +309,19 @@
                 plugins: { legend: { display: false } },
                 scales: { 
                     x: { display: false }, 
-                    y: { 
-                        display: true, 
-                        min: 0, max: 800,
-                        grid: { color: '#333' },
-                        ticks: { color: '#888', font: {size: 11} }
-                    } 
-                },
-                animation: false
+                    y: { display: true, min: 0, max: 800, grid: { color: '#333' }, ticks: { color: '#999', font: {size: 11} } } 
+                }, animation: false
             }
         });
 
-        // --- FUNZIONI UI & LOGICA ---
+        // --- UI ---
         function updateUI() {
             document.getElementById('val-r').innerText = r;
             document.getElementById('val-m').innerText = m;
             document.getElementById('val-a').innerText = a;
-            
             document.getElementById('live-r').innerText = r;
             document.getElementById('live-m').innerText = m;
             document.getElementById('live-a').innerText = a;
-            
             if(isSaved) {
                 calcDiff('diff-r', savedR, r);
                 calcDiff('diff-m', savedM, m);
@@ -364,7 +334,6 @@
             let diff = 0;
             if(base > 0) diff = ((current - base) / base) * 100;
             else if(current > 0) diff = 100;
-            
             el.innerText = (diff > 0 ? "+" : "") + diff.toFixed(0) + "%";
             el.className = diff >= 0 ? "diff-pos" : "diff-neg";
         }
@@ -375,28 +344,18 @@
             document.getElementById('pre-r').innerText = savedR;
             document.getElementById('pre-m').innerText = savedM;
             document.getElementById('pre-a').innerText = savedA;
-            
             chart.data.datasets[3].data = [...chart.data.datasets[0].data];
             chart.data.datasets[4].data = [...chart.data.datasets[1].data];
             chart.data.datasets[5].data = [...chart.data.datasets[2].data];
-            chart.data.datasets[3].hidden = false;
-            chart.data.datasets[4].hidden = false;
-            chart.data.datasets[5].hidden = false;
+            chart.data.datasets[3].hidden = false; chart.data.datasets[4].hidden = false; chart.data.datasets[5].hidden = false;
             chart.update();
         });
 
         document.getElementById('pauseBtn').addEventListener('click', () => {
             isPaused = !isPaused;
             let btn = document.getElementById('pauseBtn');
-            if(isPaused) {
-                btn.innerText = "►";
-                btn.style.color = "#10b981";
-                btn.style.borderColor = "#10b981";
-            } else {
-                btn.innerText = "II";
-                btn.style.color = "white";
-                btn.style.borderColor = "rgba(255,255,255,0.1)";
-            }
+            if(isPaused) { btn.innerText = "►"; btn.style.color = "#34d399"; } 
+            else { btn.innerText = "II"; btn.style.color = "white"; }
         });
 
         document.getElementById('resetBtn').addEventListener('click', () => {
@@ -405,6 +364,7 @@
             chart.update();
         });
 
+        // --- CONNESSIONE SPECIFICA PER PIXEL / ARDUINO UNO R3 ---
         document.getElementById('connectBtn').addEventListener('click', async () => {
             const btn = document.getElementById('connectBtn');
             const dot = document.getElementById('status-dot');
@@ -413,19 +373,29 @@
                 if(reader) { await reader.cancel(); await readableStreamClosed.catch(()=>{}); }
                 if(port) await port.close();
                 isConnected = false;
-                dot.style.background = '#444'; dot.style.boxShadow = 'none';
-                btn.innerText = "CONNECT"; btn.style.background = "#3b82f6";
+                dot.style.background = '#333'; dot.style.border = '2px solid #000';
+                btn.innerText = "CONNECT"; btn.style.background = "#4da6ff"; btn.style.color = "#000";
                 return;
             }
 
             if ("serial" in navigator) {
                 try {
-                    port = await navigator.serial.requestPort({ filters: [] });
+                    // TENTATIVO 1: FILTRI SPECIFICI PER ARDUINO UNO R3 E CLONI
+                    // Questo aiuta il Pixel a fidarsi della richiesta
+                    const filters = [
+                        { usbVendorId: 0x2341 }, // Arduino Originale
+                        { usbVendorId: 0x1a86 }, // Chip CH340 (Cinese)
+                        { usbVendorId: 0x0403 }  // Chip FTDI
+                    ];
+
+                    // Se fallisce con i filtri, proverà senza (nel catch)
+                    port = await navigator.serial.requestPort({ filters: filters });
+                    
                     await port.open({ baudRate: 9600 });
                     
                     isConnected = true;
-                    dot.style.background = '#10b981'; dot.style.boxShadow = '0 0 10px #10b981';
-                    btn.innerText = "STOP"; btn.style.background = "#ef4444";
+                    dot.style.background = '#34d399'; dot.style.border = 'none';
+                    btn.innerText = "STOP"; btn.style.background = "#ef4444"; btn.style.color = "#fff";
 
                     const textDecoder = new TextDecoderStream();
                     readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
@@ -444,12 +414,16 @@
                     }
 
                 } catch (e) {
+                    // Fallback: Se l'utente non seleziona nulla o se i filtri falliscono
                     console.error(e);
-                    alert("Errore Connessione.");
+                    // Riprova senza filtri solo se l'errore non è "User cancelled"
+                    if (!e.toString().includes("User cancelled")) {
+                         alert("Nessun Arduino Rilevato.\n1. Controlla il cavo OTG.\n2. Verifica che 'USB Serial Terminal' sia chiuso.");
+                    }
                     isConnected = false;
                 }
             } else {
-                alert("Browser non supportato (Usa Chrome Android).");
+                alert("Browser non supportato. Usa Chrome.");
             }
         });
 
@@ -484,4 +458,3 @@
     </script>
 </body>
 </html>
-
