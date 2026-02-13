@@ -365,7 +365,7 @@
         });
 
         // --- CONNESSIONE SPECIFICA PER PIXEL / ARDUINO UNO R3 ---
-        document.getElementById('connectBtn').addEventListener('click', async () => {
+document.getElementById('connectBtn').addEventListener('click', async () => {
             const btn = document.getElementById('connectBtn');
             const dot = document.getElementById('status-dot');
 
@@ -380,16 +380,10 @@
 
             if ("serial" in navigator) {
                 try {
-                    // TENTATIVO 1: FILTRI SPECIFICI PER ARDUINO UNO R3 E CLONI
-                    // Questo aiuta il Pixel a fidarsi della richiesta
-                    const filters = [
-                        { usbVendorId: 0x2341 }, // Arduino Originale
-                        { usbVendorId: 0x1a86 }, // Chip CH340 (Cinese)
-                        { usbVendorId: 0x0403 }  // Chip FTDI
-                    ];
-
-                    // Se fallisce con i filtri, proverà senza (nel catch)
-                    port = await navigator.serial.requestPort({ filters: filters });
+                    // --- TENTATIVO SENZA FILTRI ---
+                    // Su Android spesso i filtri nascondono dispositivi validi.
+                    // Proviamo a chiedere "tutto".
+                    port = await navigator.serial.requestPort({ filters: [] });
                     
                     await port.open({ baudRate: 9600 });
                     
@@ -414,43 +408,29 @@
                     }
 
                 } catch (e) {
-                    // Fallback: Se l'utente non seleziona nulla o se i filtri falliscono
                     console.error(e);
-                    // Riprova senza filtri solo se l'errore non è "User cancelled"
-                    if (!e.toString().includes("User cancelled")) {
-                         alert("Nessun Arduino Rilevato.\n1. Controlla il cavo OTG.\n2. Verifica che 'USB Serial Terminal' sia chiuso.");
-                    }
+                    logError(e.toString()); // Mostra errore a schermo
                     isConnected = false;
                 }
             } else {
-                alert("Browser non supportato. Usa Chrome.");
+                alert("Browser non supportato.");
+                logError("Navigator.serial non trovato");
             }
         });
 
         function parseArduinoString(str) {
             if (isPaused) return;
+            // Parsing robusto
             const rM = str.match(/Retropiede:(\d+)/);
             const mM = str.match(/Mesopiede:(\d+)/);
             const aM = str.match(/Avampiede:(\d+)/);
             
             if (rM && mM && aM) {
-                r = parseInt(rM[1]);
-                m = parseInt(mM[1]);
-                a = parseInt(aM[1]);
-
-                chart.data.datasets[0].data.push(r);
-                chart.data.datasets[1].data.push(m);
-                chart.data.datasets[2].data.push(a);
-                
+                r = parseInt(rM[1]); m = parseInt(mM[1]); a = parseInt(aM[1]);
+                chart.data.datasets[0].data.push(r); chart.data.datasets[1].data.push(m); chart.data.datasets[2].data.push(a);
                 if(chart.data.datasets[0].data.length > 30) {
-                    chart.data.datasets[0].data.shift();
-                    chart.data.datasets[1].data.shift();
-                    chart.data.datasets[2].data.shift();
-                    if(isSaved) {
-                        chart.data.datasets[3].data.shift();
-                        chart.data.datasets[4].data.shift();
-                        chart.data.datasets[5].data.shift();
-                    }
+                    chart.data.datasets[0].data.shift(); chart.data.datasets[1].data.shift(); chart.data.datasets[2].data.shift();
+                    if(isSaved) { chart.data.datasets[3].data.shift(); chart.data.datasets[4].data.shift(); chart.data.datasets[5].data.shift(); }
                 }
                 chart.update('none');
             }
