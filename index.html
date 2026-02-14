@@ -3,330 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#121212">
-    <title>InsoleTech Pixel Fix</title>
+    <title>Insole.Pro - Analisi Statica Professionale</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="icon.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        /* STILE UGUALE A PRIMA (Pixel Dark Mode) */
         :root {
-            --bg-body: #000000;
-            --bg-card: #1c1c1e;
-            --text-main: #ffffff;
-            --text-muted: #b0b0b0;
-            --accent-blue: #4da6ff;
-            --accent-green: #34d399;
-            --accent-red: #ef4444;
-            --border: rgba(255,255,255,0.15);
-            --nav-height: 64px;
+            --bg: #F8FAFC;
+            --card: #FFFFFF;
+            --primary: #2563EB;
+            --success: #10B981;
+            --danger: #EF4444;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --border: #E2E8F0;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            padding-top: var(--nav-height);
-            overflow-y: scroll; 
-            -webkit-overflow-scrolling: touch;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text-main); padding-top: 80px; padding-bottom: 40px; }
 
         header {
-            position: fixed; top: 0; left: 0; width: 100%; height: var(--nav-height);
-            background: rgba(28, 28, 30, 0.95);
-            backdrop-filter: blur(10px);
+            position: fixed; top: 0; width: 100%; height: 70px;
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 16px;
-            z-index: 9999;
+            padding: 0 20px; z-index: 1000;
         }
 
-        .brand { font-weight: 800; font-size: 1.2rem; color: #fff; letter-spacing: 0.5px; }
-        .header-controls { display: flex; align-items: center; gap: 10px; }
+        .container { max-width: 600px; margin: 0 auto; padding: 0 15px; }
         
-        #status-dot { 
-            width: 12px; height: 12px; background: #333; border-radius: 50%; 
-            border: 2px solid #000; transition: 0.3s;
+        .card {
+            background: var(--card); border-radius: 24px;
+            border: 1px solid var(--border); margin-bottom: 20px;
+            overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
+
+        .card-header { padding: 15px 20px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 0.9rem; color: var(--text-muted); }
+
+        #p5-container { width: 100%; height: 420px; background: #fff; position: relative; }
+
+        /* Controlli Timer e Test */
+        .test-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+        button { padding: 12px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
         
-        button { border: none; outline: none; cursor: pointer; }
+        .btn-mode { background: var(--bg); color: var(--text-muted); border: 2px solid var(--border); }
+        .btn-mode.active { border-color: var(--primary); color: var(--primary); background: rgba(37,99,235,0.05); }
+        
+        .btn-main { background: var(--primary); color: white; width: 100%; height: 50px; font-size: 1rem; }
+        .btn-main:disabled { background: var(--border); cursor: not-allowed; }
 
-        .btn-icon {
-            background: rgba(255,255,255,0.1); color: white;
-            width: 42px; height: 42px; border-radius: 10px;
-            font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
-        }
-        .btn-icon:active { background: rgba(255,255,255,0.3); }
+        #timer-display { font-size: 3rem; font-weight: 800; color: var(--primary); text-align: center; margin: 10px 0; display: none; }
 
-        .btn-connect {
-            background: var(--accent-blue); color: #000;
-            padding: 0 20px; height: 42px; border-radius: 10px;
-            font-weight: 700; font-size: 0.9rem; text-transform: uppercase;
-        }
+        /* Report Area */
+        .report-area { padding: 20px; display: none; background: #fdfdfd; }
+        .comp-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        .comp-table th { text-align: left; color: var(--text-muted); font-size: 0.75rem; padding-bottom: 10px; }
+        .comp-table td { padding: 12px 0; border-top: 1px solid var(--border); font-weight: 600; }
 
-        .container { padding: 20px; display: flex; flex-direction: column; gap: 24px; padding-bottom: 80px; }
-        .card { background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); overflow: hidden; }
-        .card-header { padding: 16px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); font-size: 0.95rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .badge-diff { padding: 4px 8px; border-radius: 8px; font-size: 0.8rem; }
+        .diff-pos { background: #fee2e2; color: var(--danger); }
+        .diff-neg { background: #dcfce7; color: var(--success); }
 
-        #p5-container { width: 100%; height: 350px; background: #000; display: flex; justify-content: center; align-items: center; position: relative; }
-        .alert-toast { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: #ef4444; color: white; padding: 10px 20px; border-radius: 30px; font-weight: 700; font-size: 1rem; display: none; z-index: 10; }
-
-        .stats-row { display: flex; border-top: 1px solid var(--border); }
-        .stat-box { flex: 1; padding: 20px 5px; text-align: center; border-right: 1px solid var(--border); }
-        .stat-box:last-child { border-right: none; }
-        .stat-label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 5px; font-weight: 600; }
-        .stat-val { display: block; font-size: 1.8rem; font-weight: 800; font-family: monospace; }
-        .c-blue { color: #60a5fa; } .c-red { color: #f87171; } .c-green { color: #34d399; }
-
-        .chart-wrapper { height: 300px; width: 100%; padding: 15px; background: #151515; }
-        .action-area { padding: 20px; }
-        .btn-full { width: 100%; padding: 16px; border-radius: 12px; background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.4); font-weight: 700; font-size: 1rem; margin-bottom: 20px; }
-        .data-table { width: 100%; border-collapse: collapse; text-align: center; }
-        .data-table th { color: #888; padding-bottom: 15px; border-bottom: 1px solid #333; font-size: 0.9rem; }
-        .data-table td { padding: 15px 0; border-bottom: 1px solid #222; font-family: monospace; font-size: 1.1rem; color: #fff; }
-        .diff-pos { color: var(--accent-green); } .diff-neg { color: var(--accent-red); }
-
-        /* BOX ERRORI DI DEBUG */
-        #debug-log {
-            display: none; /* Attivato via JS se serve */
-            background: #330000; color: #ffcccc; 
-            padding: 10px; margin: 10px; border-radius: 8px; 
-            font-family: monospace; font-size: 0.8rem;
-            border: 1px solid red;
-        }
+        .stat-val { font-size: 1.4rem; font-weight: 800; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border); }
+        .stat-item { padding: 15px; text-align: center; border-right: 1px solid var(--border); }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="brand">INSOLE.TECH</div>
-        <div class="header-controls">
-            <div id="status-dot"></div>
-            <button id="resetBtn" class="btn-icon">↺</button>
-            <button id="pauseBtn" class="btn-icon">II</button>
-            <button id="connectBtn" class="btn-connect">CONNECT</button>
+        <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 800; color: var(--primary);">INSOLE.PRO</span>
+            <span id="usb-status" style="font-size: 0.6rem; color: var(--danger);">● DISCONNESSO (USB-C)</span>
         </div>
+        <button id="connectBtn" class="btn-main" style="width: auto; height: 40px; padding: 0 15px; font-size: 0.8rem;">CONNETTI</button>
     </header>
 
     <div class="container">
         
-        <div id="debug-log">DEBUG ERROR:</div>
-
         <div class="card">
-            <div id="p5-container">
-                <div id="alert-msg" class="alert-toast">⚠️ SBILANCIAMENTO</div>
-            </div>
-            <div class="stats-row">
-                <div class="stat-box"><span class="stat-label">RETRO</span><span class="stat-val c-blue" id="val-r">0</span></div>
-                <div class="stat-box"><span class="stat-label">MESO</span><span class="stat-val c-red" id="val-m">0</span></div>
-                <div class="stat-box"><span class="stat-label">AVAMP</span><span class="stat-val c-green" id="val-a">0</span></div>
+            <div class="card-header">MAPPA STATICA E BARICENTRO (CoP)</div>
+            <div id="p5-container"></div>
+            <div class="stats-grid">
+                <div class="stat-item"><span style="font-size: 0.7rem; color: var(--text-muted);">RETRO</span><span class="stat-val" id="val-r" style="color: #3b82f6;">0</span></div>
+                <div class="stat-item"><span style="font-size: 0.7rem; color: var(--text-muted);">MESO</span><span class="stat-val" id="val-m" style="color: #ef4444;">0</span></div>
+                <div class="stat-item"><span style="font-size: 0.7rem; color: var(--text-muted);">AVAMP</span><span class="stat-val" id="val-a" style="color: #10b981;">0</span></div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">ANDAMENTO PRESSIONE</div>
-            <div class="chart-wrapper">
-                <canvas id="liveChart"></canvas>
+            <div class="card-header">PROTOCOLLO DI TEST (10 SECONDI)</div>
+            <div class="test-controls">
+                <button id="mode-a" class="btn-mode active">SENZA PLANTARE</button>
+                <button id="mode-b" class="btn-mode">CON PLANTARE</button>
+            </div>
+            <div style="padding: 15px;">
+                <div id="timer-display">10s</div>
+                <button id="recordBtn" class="btn-main">AVVIA TEST STATICO</button>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">ANALISI CLINICA</div>
-            <div class="action-area">
-                <button class="btn-full" id="btn-snapshot">📷 SALVA BASELINE</button>
-                <table class="data-table">
-                    <thead><tr><th>ZONA</th><th>BASE</th><th>LIVE</th><th>DIFF</th></tr></thead>
-                    <tbody>
-                        <tr><td>Retro</td><td id="pre-r">--</td><td id="live-r">0</td><td id="diff-r">--</td></tr>
-                        <tr><td>Meso</td><td id="pre-m">--</td><td id="live-m">0</td><td id="diff-m">--</td></tr>
-                        <tr><td>Avamp</td><td id="pre-a">--</td><td id="live-a">0</td><td id="diff-a">--</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <div id="report-section" class="card report-area">
+            <h2 style="font-size: 1.1rem; margin-bottom: 10px;">Referto Analisi Comparativa</h2>
+            <div id="comparison-content">
+                </div>
+            <button id="pdfBtn" class="btn-main" style="margin-top: 20px; background: #000;">📄 SCARICA REFERTO PDF</button>
         </div>
+
     </div>
 
     <script>
-        // --- FUNZIONE DEBUG (Mostra errori a schermo) ---
-        function logError(msg) {
-            const dbg = document.getElementById('debug-log');
-            dbg.style.display = 'block';
-            dbg.innerText += "\n" + msg;
-        }
-
         let r = 0, m = 0, a = 0;
-        let smoothX = 0, smoothY = 0;
-        let trace = [];
-        let savedR = 0, savedM = 0, savedA = 0, isSaved = false;
-        let isConnected = false;
-        let isPaused = false;
-        let port, reader, readableStreamClosed;
+        let isConnected = false, isRecording = false;
+        let currentMode = 'A';
+        let baseline = null, comparison = null;
+        let sessionData = { r: [], m: [], a: [] };
+        let port, reader;
+        let timeLeft = 10;
+        let countdown;
 
+        // --- P5.JS: GRAFICA E HEATMAP ---
         function setup() {
             let container = document.getElementById('p5-container');
             let cnv = createCanvas(container.offsetWidth, container.offsetHeight);
             cnv.parent('p5-container');
-            imageMode(CENTER);
         }
-        function windowResized() {
-            let container = document.getElementById('p5-container');
-            if(container) resizeCanvas(container.offsetWidth, container.offsetHeight);
-        }
+
         function draw() {
-            clear(); push(); translate(width/2, height/2);
-            let scaleFactor = min(width, height) / 380; scale(scaleFactor);
-            noFill(); stroke(255, 50); strokeWeight(3);
+            clear();
+            translate(width/2, height/2);
+            scale(min(width, height) / 420);
+
+            // Sagoma Piede
+            stroke('#E2E8F0'); strokeWeight(3); noFill();
+            drawFootOutline();
+
+            // Heatmap Sensori
+            drawHeatPoint(10, 130, r, [59, 130, 246]);   
+            drawHeatPoint(35, 0, m, [239, 68, 68]);     
+            drawHeatPoint(-15, -135, a, [16, 185, 129]); 
+
+            // Baricentro (CoP)
+            let cop = calculateCOP(r, m, a);
+            if((r+m+a) > 30) {
+                // CoP Attuale
+                fill(37, 99, 235); noStroke();
+                ellipse(cop.x, cop.y, 14, 14);
+                
+                // Se c'è Baseline, mostra vettore spostamento
+                if(baseline) {
+                    let bCop = calculateCOP(baseline.r, baseline.m, baseline.a);
+                    stroke(100, 116, 139, 100); line(bCop.x, bCop.y, cop.x, cop.y);
+                    fill(100, 116, 139, 150); ellipse(bCop.x, bCop.y, 10, 10);
+                }
+            }
+            updateLabels();
+        }
+
+        function drawFootOutline() {
             beginShape();
-            vertex(-30, -140); bezierVertex(-10, -160, 40, -150, 60, -110);
-            bezierVertex(70, -50, 70, 50, 50, 150); bezierVertex(30, 180, -20, 180, -40, 150);
-            bezierVertex(-30, 100, -10, 50, -40, 0); bezierVertex(-60, -50, -50, -100, -30, -140);
+            vertex(-30, -165); bezierVertex(-10, -185, 50, -175, 75, -135);
+            bezierVertex(85, -75, 85, 55, 60, 155); bezierVertex(40, 190, -20, 190, -45, 155);
+            bezierVertex(-35, 110, -15, 60, -50, 0); bezierVertex(-75, -60, -60, -125, -30, -165);
             endShape(CLOSE);
-            drawSensor(5, 150, r, [77, 166, 255]); drawSensor(40, 0, m, [255, 99, 99]); drawSensor(-20, -120, a, [52, 211, 153]);
-            let total = r + m + a;
-            if (total > 50) {
-                let x = ((r * 5) + (m * 40) + (a * -20)) / total;
-                let y = ((r * 150) + (m * 0) + (a * -120)) / total;
-                smoothX = lerp(smoothX, x, 0.1); smoothY = lerp(smoothY, y, 0.1);
-                trace.push({x: smoothX, y: smoothY}); if(trace.length > 20) trace.shift();
-                noFill(); stroke(255, 200); strokeWeight(2); beginShape(); trace.forEach(p => vertex(p.x, p.y)); endShape();
-                noStroke(); fill(255); ellipse(smoothX, smoothY, 14, 14);
-                let alertBox = document.getElementById('alert-msg');
-                if(Math.abs(smoothX) > 40) alertBox.style.display = 'block'; else alertBox.style.display = 'none';
+        }
+
+        function drawHeatPoint(x, y, val, rgb) {
+            let radius = map(val, 0, 1023, 20, 180);
+            for(let i = radius; i > 0; i -= 15) {
+                fill(rgb[0], rgb[1], rgb[2], map(i, 0, radius, 150, 0));
+                noStroke(); ellipse(x, y, i);
             }
-            pop(); updateUI();
-        }
-        function drawSensor(x, y, val, rgb) {
-            let size = map(val, 0, 800, 30, 240); size = constrain(size, 30, 260);
-            let alpha = map(val, 0, 800, 60, 220);
-            noStroke(); fill(rgb[0], rgb[1], rgb[2], alpha); ellipse(x, y, size);
-            fill(255); ellipse(x, y, 8);
         }
 
-        const ctx = document.getElementById('liveChart').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Array(30).fill(''),
-                datasets: [
-                    { label: 'R', data: [], borderColor: '#4da6ff', backgroundColor: 'rgba(77, 166, 255, 0.1)', fill: true, borderWidth: 3, pointRadius: 0, tension: 0.3 },
-                    { label: 'M', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, borderWidth: 3, pointRadius: 0, tension: 0.3 },
-                    { label: 'A', data: [], borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)', fill: true, borderWidth: 3, pointRadius: 0, tension: 0.3 },
-                    { label: 'B', data: [], borderColor: '#fff', borderDash:[5,5], borderWidth:2, pointRadius:0, hidden:true },
-                    { label: 'B', data: [], borderColor: '#fff', borderDash:[5,5], borderWidth:2, pointRadius:0, hidden:true },
-                    { label: 'B', data: [], borderColor: '#fff', borderDash:[5,5], borderWidth:2, pointRadius:0, hidden:true }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { x: { display: false }, y: { display: true, min: 0, max: 800, grid: { color: '#333' }, ticks: { color: '#999', font: {size: 11} } } }, animation: false
-            }
-        });
-
-        function updateUI() {
-            document.getElementById('val-r').innerText = r; document.getElementById('val-m').innerText = m; document.getElementById('val-a').innerText = a;
-            document.getElementById('live-r').innerText = r; document.getElementById('live-m').innerText = m; document.getElementById('live-a').innerText = a;
-            if(isSaved) { calcDiff('diff-r', savedR, r); calcDiff('diff-m', savedM, m); calcDiff('diff-a', savedA, a); }
-        }
-        function calcDiff(id, base, current) {
-            let el = document.getElementById(id); let diff = 0;
-            if(base > 0) diff = ((current - base) / base) * 100; else if(current > 0) diff = 100;
-            el.innerText = (diff > 0 ? "+" : "") + diff.toFixed(0) + "%"; el.className = diff >= 0 ? "diff-pos" : "diff-neg";
+        function calculateCOP(rv, mv, av) {
+            let total = rv + mv + av || 1;
+            return {
+                x: ((rv * 10) + (mv * 35) + (av * -15)) / total,
+                y: ((rv * 130) + (mv * 0) + (av * -135)) / total
+            };
         }
 
-        document.getElementById('btn-snapshot').addEventListener('click', () => {
-            savedR = r; savedM = m; savedA = a; isSaved = true;
-            document.getElementById('pre-r').innerText = savedR; document.getElementById('pre-m').innerText = savedM; document.getElementById('pre-a').innerText = savedA;
-            chart.data.datasets[3].data = [...chart.data.datasets[0].data]; chart.data.datasets[4].data = [...chart.data.datasets[1].data]; chart.data.datasets[5].data = [...chart.data.datasets[2].data];
-            chart.data.datasets[3].hidden = false; chart.data.datasets[4].hidden = false; chart.data.datasets[5].hidden = false; chart.update();
-        });
-        document.getElementById('pauseBtn').addEventListener('click', () => {
-            isPaused = !isPaused; let btn = document.getElementById('pauseBtn');
-            if(isPaused) { btn.innerText = "►"; btn.style.color = "#34d399"; } else { btn.innerText = "II"; btn.style.color = "white"; }
-        });
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            r = 0; m = 0; a = 0; smoothX = 0; smoothY = 0; trace = [];
-            chart.data.datasets.forEach(ds => ds.data = []); chart.update();
-        });
+        // --- SERIALE USB-C ---
+        document.getElementById('connectBtn').onclick = async () => {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+                isConnected = true;
+                document.getElementById('usb-status').innerText = "● CONNETTO (USB-C)";
+                document.getElementById('usb-status').style.color = "var(--success)";
+                readUSB();
+            } catch (e) { console.log("Connessione annullata"); }
+        };
 
-        // --- GESTIONE CONNESSIONE ROBUSTA ---
-        document.getElementById('connectBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('connectBtn');
-            const dot = document.getElementById('status-dot');
-
-            if (isConnected) {
-                if(reader) { await reader.cancel(); await readableStreamClosed.catch(()=>{}); }
-                if(port) await port.close();
-                isConnected = false;
-                dot.style.background = '#333'; dot.style.border = '2px solid #000';
-                btn.innerText = "CONNECT"; btn.style.background = "#4da6ff"; btn.style.color = "#000";
-                return;
-            }
-
-            if ("serial" in navigator) {
-                try {
-                    // --- TENTATIVO SENZA FILTRI ---
-                    // Su Android spesso i filtri nascondono dispositivi validi.
-                    // Proviamo a chiedere "tutto".
-                    port = await navigator.serial.requestPort({ filters: [] });
-                    
-                    await port.open({ baudRate: 9600 });
-                    
-                    isConnected = true;
-                    dot.style.background = '#34d399'; dot.style.border = 'none';
-                    btn.innerText = "STOP"; btn.style.background = "#ef4444"; btn.style.color = "#fff";
-
-                    const textDecoder = new TextDecoderStream();
-                    readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-                    reader = textDecoder.readable.getReader();
-
-                    let buffer = "";
-                    while (true) {
-                        const { value, done } = await reader.read();
-                        if (done) break;
-                        buffer += value;
-                        let lines = buffer.split('\n');
-                        for (let i = 0; i < lines.length - 1; i++) {
-                            parseArduinoString(lines[i]);
+        async function readUSB() {
+            const decoder = new TextDecoderStream();
+            port.readable.pipeTo(decoder.writable);
+            reader = decoder.readable.getReader();
+            let buffer = "";
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buffer += value;
+                let lines = buffer.split('\n');
+                for (let i = 0; i < lines.length - 1; i++) {
+                    let mR = lines[i].match(/Retropiede:(\d+)/);
+                    let mM = lines[i].match(/Mesopiede:(\d+)/);
+                    let mA = lines[i].match(/Avampiede:(\d+)/);
+                    if(mR && mM && mA) {
+                        r = parseInt(mR[1]); m = parseInt(mM[1]); a = parseInt(mA[1]);
+                        if(isRecording) {
+                            sessionData.r.push(r); sessionData.m.push(m); sessionData.a.push(a);
                         }
-                        buffer = lines[lines.length - 1];
                     }
-
-                } catch (e) {
-                    console.error(e);
-                    logError(e.toString()); // Mostra errore a schermo
-                    isConnected = false;
                 }
-            } else {
-                alert("Browser non supportato.");
-                logError("Navigator.serial non trovato");
+                buffer = lines[lines.length - 1];
             }
-        });
+        }
 
-        function parseArduinoString(str) {
-            if (isPaused) return;
-            // Parsing robusto
-            const rM = str.match(/Retropiede:(\d+)/);
-            const mM = str.match(/Mesopiede:(\d+)/);
-            const aM = str.match(/Avampiede:(\d+)/);
+        // --- GESTIONE TEST E TIMER ---
+        document.getElementById('mode-a').onclick = () => switchMode('A');
+        document.getElementById('mode-b').onclick = () => switchMode('B');
+
+        function switchMode(m) {
+            currentMode = m;
+            document.getElementById('mode-a').className = m === 'A' ? 'btn-mode active' : 'btn-mode';
+            document.getElementById('mode-b').className = m === 'B' ? 'btn-mode active' : 'btn-mode';
+        }
+
+        document.getElementById('recordBtn').onclick = function() {
+            if(!isConnected) return alert("Connetti prima la soletta via USB!");
             
-            if (rM && mM && aM) {
-                r = parseInt(rM[1]); m = parseInt(mM[1]); a = parseInt(aM[1]);
-                chart.data.datasets[0].data.push(r); chart.data.datasets[1].data.push(m); chart.data.datasets[2].data.push(a);
-                if(chart.data.datasets[0].data.length > 30) {
-                    chart.data.datasets[0].data.shift(); chart.data.datasets[1].data.shift(); chart.data.datasets[2].data.shift();
-                    if(isSaved) { chart.data.datasets[3].data.shift(); chart.data.datasets[4].data.shift(); chart.data.datasets[5].data.shift(); }
-                }
-                chart.update('none');
+            isRecording = true;
+            timeLeft = 10;
+            sessionData = { r: [], m: [], a: [] };
+            
+            this.disabled = true;
+            const timerDisp = document.getElementById('timer-display');
+            timerDisp.style.display = 'block';
+            timerDisp.innerText = timeLeft + "s";
+
+            countdown = setInterval(() => {
+                timeLeft--;
+                timerDisp.innerText = timeLeft + "s";
+                if(timeLeft <= 0) stopRecording();
+            }, 1000);
+        };
+
+        function stopRecording() {
+            clearInterval(countdown);
+            isRecording = false;
+            document.getElementById('recordBtn').disabled = false;
+            document.getElementById('timer-display').style.display = 'none';
+            
+            const avg = arr => Math.round(arr.reduce((a,b)=>a+b, 0) / arr.length);
+            let results = { r: avg(sessionData.r), m: avg(sessionData.m), a: avg(sessionData.a) };
+            
+            if(currentMode === 'A') baseline = results;
+            else comparison = results;
+            
+            renderReport();
+        }
+
+        function renderReport() {
+            const area = document.getElementById('report-section');
+            const content = document.getElementById('comparison-content');
+            area.style.display = 'block';
+            
+            if(!comparison) {
+                content.innerHTML = `<p style="color:var(--success); font-weight:600;">✅ Baseline salvata. Ora inserisci il plantare e avvia il secondo test.</p>`;
+            } else {
+                let dR = ((comparison.r - baseline.r)/baseline.r*100).toFixed(1);
+                let dA = ((comparison.a - baseline.a)/baseline.a*100).toFixed(1);
+                
+                content.innerHTML = `
+                    <table class="comp-table">
+                        <tr><th>ZONA</th><th>PRE</th><th>POST</th><th>VARIAZIONE</th></tr>
+                        <tr><td>Retropiede</td><td>${baseline.r}</td><td>${comparison.r}</td><td><span class="badge-diff ${dR>0?'diff-pos':'diff-neg'}">${dR}%</span></td></tr>
+                        <tr><td>Mesopiede</td><td>${baseline.m}</td><td>${comparison.m}</td><td>--</td></tr>
+                        <tr><td>Avampiede</td><td>${baseline.a}</td><td>${comparison.a}</td><td><span class="badge-diff ${dA>0?'diff-pos':'diff-neg'}">${dA}%</span></td></tr>
+                    </table>
+                `;
             }
+        }
+
+        // --- PDF GENERATION ---
+        document.getElementById('pdfBtn').onclick = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const date = new Date().toLocaleDateString();
+
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(37, 99, 235);
+            doc.text("INSOLE.PRO - REFERTO PODOLOGICO", 20, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Data: ${date} | Tipo Analisi: Statica 10s`, 20, 30);
+            doc.line(20, 35, 190, 35);
+
+            if(baseline && comparison) {
+                doc.setTextColor(0);
+                doc.setFontSize(12);
+                doc.text("Confronto Distribuzione Pressione:", 20, 50);
+                doc.text(`Retro: ${baseline.r} (Pre) -> ${comparison.r} (Post)`, 25, 60);
+                doc.text(`Avamp: ${baseline.a} (Pre) -> ${comparison.a} (Post)`, 25, 70);
+                
+                doc.text("Analisi Biomeccanica:", 20, 90);
+                let shift = baseline.a - comparison.a;
+                doc.setFont("helvetica", "normal");
+                doc.text(shift > 0 ? "- Il plantare ha ridotto correttamente il carico anteriore." : "- Carico anteriore aumentato o invariato.", 20, 100);
+            }
+
+            doc.save(`Analisi_InsolePro_${date}.pdf`);
+        };
+
+        function updateLabels() {
+            document.getElementById('val-r').innerText = r;
+            document.getElementById('val-m').innerText = m;
+            document.getElementById('val-a').innerText = a;
         }
     </script>
 </body>
